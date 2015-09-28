@@ -11,6 +11,8 @@ geerlingguy.java
 geerlingguy.mailhog
 geerlingguy.memcached
 geerlingguy.mysql
+geerlingguy.nginx
+geerlingguy.nodejs
 geerlingguy.php
 geerlingguy.php-memcached
 geerlingguy.php-mysql
@@ -18,7 +20,9 @@ geerlingguy.php-pecl
 geerlingguy.php-xdebug
 geerlingguy.php-xhprof
 geerlingguy.pimpmylog
+geerlingguy.postfix
 geerlingguy.repo-remi
+geerlingguy.ruby
 geerlingguy.security
 geerlingguy.solr
 geerlingguy.varnish
