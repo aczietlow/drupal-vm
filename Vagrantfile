@@ -60,28 +60,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
   end
 
-  for synced_folder in vconfig['vagrant_synced_folders'];
-    config.vm.synced_folder synced_folder['local_path'], synced_folder['destination'],
-      type: synced_folder['type'],
-      rsync__auto: "true",
-      rsync__exclude: synced_folder['excluded_paths'],
-      rsync__args: ["--verbose", "--archive", "--delete", "-z", "--chmod=ugo=rwX"],
-      id: synced_folder['id'],
-      create: synced_folder.include?('create') ? synced_folder['create'] : false,
-      mount_options: synced_folder.include?('mount_options') ? synced_folder['mount_options'] : []
-  end
-
   # Provision using Ansible provisioner if Ansible is installed on host.
   if which('ansible-playbook')
     config.vm.provision "ansible" do |ansible|
       ansible.playbook = "#{dir}/provisioning/playbook.yml"
       ansible.sudo = true
-    end
-  # Provision using shell provisioner and JJG-Ansible-Windows otherwise.
-  else
-    config.vm.provision "shell" do |sh|
-      sh.path = "#{dir}/provisioning/JJG-Ansible-Windows/windows.sh"
-      sh.args = "/provisioning/playbook.yml"
     end
   end
 
@@ -103,14 +86,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     v.customize ["modifyvm", :id, "--ioapic", "on"]
     # v.customize ["modifyvm", :id, "--paravirtprovider", "kvm"]
-  end
-
-  # Parallels.
-  config.vm.provider :parallels do |p, override|
-    override.vm.box = vconfig['vagrant_box']
-    p.name = vconfig['vagrant_hostname']
-    p.memory = vconfig['vagrant_memory']
-    p.cpus = vconfig['vagrant_cpus']
   end
 
   # Set the name of the VM. See: http://stackoverflow.com/a/17864388/100134
