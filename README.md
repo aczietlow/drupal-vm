@@ -1,3 +1,75 @@
+# MIS Example
+## Setting up a local [Vagrant](http://vagrantup.com) environment
+
+
+### Download and install VirtualBox (>= 4.3.x) from [here](https://www.virtualbox.org/wiki/Downloads).
+
+### Download and install Vagrant from [here](http://www.vagrantup.com/downloads-archive.html).
+
+### Add the vagrant ssh key to your .ssh directory
+- `$ ln -s ~/.vagrant.d/insecure_private_key ~/.ssh/vagrant_insecure_private_key`
+- `$ chmod 600 ~/.ssh/vagrant_insecure_private_key`
+
+### Add mcdev top level domain to your ssh config by editing [home]/.ssh/config and adding the following lines
+    Host *.mcdev
+        ForwardAgent yes
+        IdentityFile ~/.ssh/vagrant_insecure_private_key
+        User vagrant
+
+### Clone these repos into the directory of your choice:
+- `$ git clone --recursive git@bitbucket.org:mediacurrent/mis_vagrant_example.git`
+
+### Initialize the submodules to get the mis_example codebase
+- `$ cd mis_vagrant_example`
+- `$ git submodule init && git submodule update`
+- `$ git submodule foreach git pull origin develop`
+
+The Example codebase ( git@bitbucket.org:mediacurrent/mis_example.git_)
+is now installed in the "mis_example" directory.
+
+### Edit your local `/etc/hosts` file to include the new box ips
+    192.168.50.4 example.mcdev
+
+### Start the box from the `mis_vagrant_example` directory
+- `$ vagrant up`
+*You may be prompted for your sudo password for the NFS mount*
+
+### Install site
+
+@example.mcdev
+
+* `$ cd path/to/docroot`
+
+* `$ drush @example.mcdev si minimal --sites-subdir='example.mcdev' --db-url='mysql://root:password@localhost/example_mcdev' --account-mail='nothing@example.com' --account-name='admin' --account-pass='password' --site-name='Example' --site-mail='nothing@example.com' -y`
+
+* `$ chmod -R ugo+w sites/example.mcdev/files`
+
+### Generate a login link
+- `$ cd path/to/docroot`
+- `$ drush @example.mcdev uli`
+  or
+- `$ vagrant ssh`
+- `$ cd /home/vagrant/docroot/sites/example.mcdev`
+- `$ drush uli`
+
+- Log out of the vagrant server (ctrl-d usually works well)
+
+### Run the code-review.sh tests.
+(Drupal 7 only)
+
+*NOTE* There will be not tests run until modules are in the "sites/all/modules/custom" directory.
+
+- `$ vagrant ssh -c "/vagrant/tests/code-review.sh example.mcdev /home/vagrant/docroot"`
+
+### Run the security-review.sh tests.
+(Drupal 7 only)
+
+- `$ vagrant ssh -c "/vagrant/tests/security-review.sh example.mcdev /home/vagrant/docroot"`
+
+### Run the pa11y-review.sh tests.
+
+- `$ vagrant ssh -c "/vagrant/tests/pa11y/pa11y-review.sh example.mcdev"`
+
 ## [Documentation](Documentation)
 
 * [UserQuickstart](Documentation/UserQuickstart.md)
@@ -6,15 +78,7 @@
 * [FAQ](Documentation/FAQ.md)
 * [Gitflow](Documentation/Gitflow.md)
 
-## Mediacurrent recipes
-
-* [dev-tools](cookbooks/mc-cookbooks/dev-tools/README.md)
-* [drush](cookbooks/mc-cookbooks/drush/README.md)
-* [default-mcdev](cookbooks/mc-cookbooks/default-mcdev/README.md)
-* [lamp](cookbooks/mc-cookbooks/lamp/README.md)
-* [utils](cookbooks/mc-cookbooks/utils/README.md)
-
-<p align="center"><img src="https://raw.githubusercontent.com/geerlingguy/drupal-vm/master/docs/images/drupal-vm-logo.png" alt="Drupal VM Logo" /></p>
+![Drupal VM Logo](https://raw.githubusercontent.com/geerlingguy/drupal-vm/master/docs/images/drupal-vm-logo.png)
 
 [![Build Status](https://travis-ci.org/geerlingguy/drupal-vm.svg?branch=master)](https://travis-ci.org/geerlingguy/drupal-vm) [![Documentation Status](https://readthedocs.org/projects/drupal-vm/badge/?version=latest)](http://docs.drupalvm.com)
 
@@ -24,7 +88,7 @@ This project aims to make spinning up a simple local Drupal test/development env
 
 It will install the following on an Ubuntu 14.04 (by default) linux VM:
 
-  - Apache 2.4.x
+  - Apache 2.4.x (or Nginx 1.x)
   - PHP 5.5.x (configurable)
   - MySQL 5.5.x
   - Drush (configurable)
@@ -33,7 +97,9 @@ It will install the following on an Ubuntu 14.04 (by default) linux VM:
   - Optional:
     - Varnish 4.x
     - Apache Solr 4.10.x (configurable)
+    - Node.js
     - Selenium, for testing your sites via Behat
+    - Ruby
     - Memcached
     - XHProf, for profiling your code
     - XDebug, for debugging your code
@@ -86,14 +152,14 @@ Note on versions: *Please make sure you're running the latest stable version of 
   4. Open Terminal, cd to this directory (containing the `Vagrantfile` and this README file).
   5. Type in `vagrant up`, and let Vagrant do its magic.
 
-If you have Ansible installed on your host machine: Run `$ sudo ansible-galaxy install -r provisioning/requirements.txt --force` prior to step 5 (`vagrant up`), otherwise Ansible will complain about missing roles.
+If you have Ansible installed on your host machine: Run `$ sudo ansible-galaxy install -r provisioning/requirements.yml --force` prior to step 5 (`vagrant up`), otherwise Ansible will complain about missing roles.
 
 Note: *If there are any errors during the course of running `vagrant up`, and it drops you back to your command prompt, just run `vagrant provision` to continue building the VM from where you left off. If there are still errors after doing this a few times, post an issue to this project's issue queue on GitHub with the error.*
 
 ### 3 - Configure your host machine to access the VM.
 
   1. [Edit your hosts file](http://www.rackspace.com/knowledge_center/article/how-do-i-modify-my-hosts-file), adding the line `192.168.88.88  drupalvm.dev` so you can connect to the VM.
-    - You can have Vagrant automatically configure your hosts file if you install the `hostsupdater` plugin (`vagrant plugin install vagrant-hostsupdater`). All hosts defined in `apache_vhosts` will be automatically managed.
+    - You can have Vagrant automatically configure your hosts file if you install the `hostsupdater` plugin (`vagrant plugin install vagrant-hostsupdater`). All hosts defined in `apache_vhosts` or `nginx_hosts` will be automatically managed.
     - You can also have Vagrant automatically assign an available IP address to your VM if you install the `auto_network` plugin (`vagrant plugin install vagrant-auto_network`), and set `vagrant_ip` to `0.0.0.0` inside `config.yml`.
   2. Open your browser and access [http://drupalvm.dev/](http://drupalvm.dev/). The default login for the admin account is `admin` for both the username and password.
 
